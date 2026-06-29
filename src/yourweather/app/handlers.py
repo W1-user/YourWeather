@@ -17,6 +17,8 @@ class Form(StatesGroup):
     city = State()
     time = State()
 
+    last_message_id = State()
+
 
 def setup_scheduler(sched: WeatherScheduler):
     global scheduler
@@ -46,15 +48,30 @@ async def welcome(msg: Message):
 
 
 @router.callback_query(F.data == "send_city_")
-async def send_city(cq: CallbackQuery, state: FSMContext):
+async def send_city(cq: CallbackQuery, state: FSMContext): 
     await state.set_state(Form.city)
-    await cq.message.edit_text(f"<b>Введите нужный вам город (На латинице):</b>")
+    await cq.message.delete()
 
+    message = await cq.message.answer(f"<b>Введите нужный вам город (На латинице):</b>")
+    
+    await state.update_data(last_message_id=message.message_id)
+    await cq.answer()
 
 @router.message(Form.city)
 async def send_data_city_database(msg: Message, state: FSMContext):
     await state.update_data(city=msg.text)
     data = await state.get_data()
+
+    if "last_message_id" in data:
+        try:
+            await msg.bot.delete_message(
+                chat_id=msg.chat.id,
+                message_id=data["last_message_id"],
+            )
+        except:
+            pass
+    
+    await msg.delete()
 
     async with async_session() as session:
         stmt = select(User).where(User.tg_id == msg.from_user.id)
@@ -95,15 +112,30 @@ async def send_data_city_database(msg: Message, state: FSMContext):
 @router.callback_query(F.data == "send_time_")
 async def send_tts(cq: CallbackQuery, state: FSMContext):
     await state.set_state(Form.time)
-    await cq.message.edit_text(
+    await cq.message.delete()
+
+    message = await cq.message.answer(
         f"<b>Пример: 12:00 или 12:35\nВведите нужное время отправки:</b>"
     )
+    await state.update_data(last_message_id=message.message_id)
 
 
 @router.message(Form.time)
 async def send_data_time_database(msg: Message, state: FSMContext):
     await state.update_data(time=msg.text)
     data = await state.get_data()
+
+    if "last_message_id" in data:
+        try:
+            await msg.bot.delete_message(
+                chat_id=msg.chat.id,
+                message_id=data["last_message_id"],
+            )
+        except:
+            pass
+
+    await msg.delete()
+    
     try:
         hour, minute = map(int, data["time"].split(":"))
         if not 0 <= hour <= 59 or not 0 <= minute <= 59:

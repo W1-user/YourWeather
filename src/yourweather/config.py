@@ -10,7 +10,7 @@ load_dotenv()
 
 class DatabaseSettings(BaseModel):
     url: str = os.getenv("DATABASE_URL")
-    echo: bool = True
+    echo: bool = False
     eoc: bool = False
 
 

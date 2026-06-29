@@ -30,7 +30,7 @@ class WeatherScheduler:
                 await self.add_jobs_for_users(user.tg_id, user.city, user.tts)
 
 
-    async def add_jobs_for_users(self, user_id: int, tts: str):
+    async def add_jobs_for_users(self, user_id: int, city: str, tts: str):
         try:
 
             hour, minute = map(int, tts.split(":"))
