@@ -15,11 +15,15 @@ dependencies = [
     "pydantic-settings (>=2.14.2,<3.0.0)",
     "apscheduler (>=3.11.3,<4.0.0)",
     "python-dotenv (>=1.2.2,<2.0.0)",
-    "logging (>=0.4.9.6,<0.5.0.0)"
+    "logging (>=0.4.9.6,<0.5.0.0)",
+    "psycopg-binary (>=3.3.4,<4.0.0)",
+    "requests (>=2.34.2,<3.0.0)",
+    "psycopg (>=3.3.4,<4.0.0)",
+    "greenlet (>=3.5.3,<4.0.0)"
 ]
 
 [tool.poetry]
-packages = [{include = "myweather", from = "src"}]
+packages = [{include = "yourweather", from = "src"}]
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
