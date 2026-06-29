@@ -178,3 +178,29 @@ async def send_data_time_database(msg: Message, state: FSMContext):
         f"<b>Привет еще раз, {msg.from_user.first_name}!\nЧто будем указывать, для отправки погоды ежедневно?</b>",
         reply_markup=kb.welcome,
     )
+
+@router.callback_query(F.data == "check_profile_")
+async def check_profile(cq: CallbackQuery):
+    async with async_session() as session:
+        stmt = select(User).where(User.tg_id == cq.from_user.id)
+        result = await session.execute(stmt)
+        user = result.scalar_one_or_none()
+
+    city = user.city
+    time = user.tts
+    notification = "Активно" if city and time else "Неактивно"
+
+    await cq.message.edit_text(
+        "<b>Твой профиль:</b>\n\n"
+        f"<b>Город: {city}</b>\n"
+        f"<b>Время оповещения: {time}\n</b>"
+        f"<b>Оповощение: {notification}</b>",
+        reply_markup=kb.back
+    )
+
+@router.callback_query(F.data == "back_")
+async def menu(cq: CallbackQuery):
+    await cq.message.edit_text(
+        f"<b>Привет еще раз, {cq.from_user.first_name}!\nЧто будем указывать, для отправки погоды ежедневно?</b>",
+        reply_markup=kb.welcome,
+    )
