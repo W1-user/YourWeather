@@ -1,26 +1,40 @@
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 
-from YourWeather.src.yourweather.config import settings
-from YourWeather.src.yourweather.app.handlers import router
-from YourWeather.src.yourweather.app.database.requests import initializator_database
+from yourweather.config import settings
+from yourweather.app.handlers import router, setup_scheduler
+from yourweather.app.database.models import initializator_database
+from yourweather.app.scheduler import WeatherScheduler
 
 import asyncio
 import logging
 
-bot = Bot(token=..., default=DefaultBotProperties(parse_mode="HTML"))
+bot = Bot(
+    token=settings.bot.token,
+    default=DefaultBotProperties(parse_mode=settings.bot.parse_mode),
+)
 dp = Dispatcher()
 
+
 async def run():
-    await initializator_database()
+    scheduler = None
+    try:
+        await initializator_database()
 
-    dp.include_router(router)
-    await dp.start_polling()
+        scheduler = WeatherScheduler(bot)
+        setup_scheduler(scheduler)
 
+        await scheduler.start()
+
+        dp.include_router(router)
+        await dp.start_polling(bot)
+    except KeyboardInterrupt:
+        print("EXIT!!!")
+    finally:
+        if scheduler:
+            await scheduler.stop()
+        await bot.session.close()
 
 if __name__ == "__main__":
     logging = logging.basicConfig(level=logging.INFO)
-    try:
-        asyncio.run(run())
-    except KeyboardInterrupt:
-        print("EXIT")
+    asyncio.run(run())
